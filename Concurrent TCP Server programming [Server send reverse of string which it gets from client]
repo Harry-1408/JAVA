@@ -1,0 +1,90 @@
+import java.io.*;
+import java.net.*;
+import java.util.*;
+
+class Handler implements Runnable {
+
+	Thread t;
+	Socket s;
+
+	Handler (Socket s) {
+		this.s = s;
+		t = new Thread(this, "Handler thread");
+		t.start();
+	}
+
+	public void run () {
+		try {
+
+			Scanner in = new Scanner(s.getInputStream());
+			PrintWriter out = new PrintWriter(s.getOutputStream());
+
+			while (true) {
+				if (in.hasNext()) {
+					String message = in.nextLine();
+					if (message.equals("stop")) 
+					break;
+					int length = message.length();
+                    String reverse="";
+                     for ( int i = length - 1 ; i >= 0 ; i-- )
+                        reverse = reverse + message.charAt(i);
+ 
+                    System.out.println("Reverse of entered string is: "+reverse);
+					
+					out.println(reverse);
+					out.flush();
+				}
+			}
+
+			s.close();
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+}
+
+class MyServer {
+	public static void main(String[] args) {
+		try {
+
+			ServerSocket server = new ServerSocket(8888);
+
+			while (true) {
+				Socket socket = server.accept();
+				Handler handler = new Handler(socket);
+			}
+
+		} catch (Exception e) {
+			System.out.println(e);
+		}
+	}
+}
+
+
+class MyClient {
+	public static void main(String[] args) {
+		try {
+
+			Socket socket = new Socket("localhost", 8888);
+			Scanner terminal = new Scanner(System.in);
+
+			Scanner in = new Scanner(socket.getInputStream());
+			PrintWriter out = new PrintWriter(socket.getOutputStream());
+
+			while (true) {
+				System.out.print("Enter a message: ");
+				String message = terminal.nextLine();
+				out.println(message);
+				out.flush();
+				if (message.equals("stop")) break;
+
+				System.out.println("From server: " + in.nextLine());
+			}
+
+		} catch (Exception e) {
+			System.out.println(e);
+		}
+	}
+}
